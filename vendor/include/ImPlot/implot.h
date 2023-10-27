@@ -250,7 +250,8 @@ enum ImPlotStairsFlags_ {
 
 // Flags for PlotShaded (placeholder)
 enum ImPlotShadedFlags_ {
-    ImPlotShadedFlags_None  = 0 // default
+    ImPlotShadedFlags_None  = 0, // default
+    ImPlotShadedFlags_Horizontal = 1 << 15
 };
 
 // Flags for PlotBars
