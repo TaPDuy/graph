@@ -6,7 +6,14 @@
 #include <ImGui/imgui_impl_glfw.h>
 #include <ImGui/imgui_impl_opengl3.h>
 
+#include <ImPlot/implot.h>
+#include "utils/CSV.h"
+#include "Graph.h"
+#include "GraphGroup.h"
+
 int main() {
+
+	CSV csv("assets/data.csv");
 
 	glfwInit();
 	const char* glsl_version = "#version 330 core";
@@ -14,8 +21,9 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(600, 600, "Imgui", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(1280, 720, "Imgui", nullptr, nullptr);
 	if (window == nullptr) {
 		glfwTerminate();
 		return -1;
@@ -29,10 +37,30 @@ int main() {
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImPlot::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	GraphGroup group("Data", "Depth", csv.getColumn("DEPT"));
+	group.addGraph("##gamma-ray");
+	group.addPlot("##gamma-ray", "GR", csv.normalize("GR", 0, 150));
+	group.addPlot("##gamma-ray", "CAL", csv.normalize("CALI", 0, 16));
+
+	group.addGraph("##resistivity");
+	group.addPlot("##resistivity", "RESDEEP", csv.normalize("ILD", 2, 2000));
+	group.addPlot("##resistivity", "RESMED", csv.normalize("ILM", 2, 2000));
+
+	group.addGraph("##density");
+	group.addPlot("##density", "PE", csv.normalize("PE", 0, 10));
+	group.addPlot("##density", "RHOB", csv.normalize("RHOB", 1.95, 2.95));
+	group.addPlot("##density", "NPHI", csv.normalize("NPHI", 0.45, -0.15));
+
+	/*graph.addPlot("Gamma Ray 2", csv.getRow("DPHI"));
+	graph.addPlot("Gamma Ray 3", csv.getRow("NPHI"));
+	graph.addPlot("Gamma Ray 4", csv.getRow("PE"));
+	graph.addPlot("Gamma Ray 5", csv.getRow("RHOB"));*/
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -42,7 +70,12 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::ShowDemoWindow();
+		/*ImGui::ShowDemoWindow();*/
+		ImPlot::ShowDemoWindow();
+
+		ImGui::Begin("Visualizer");
+		group.render();
+		ImGui::End();
 
 		ImGui::Render();
 
@@ -54,6 +87,7 @@ int main() {
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
+	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
 
 	glfwDestroyWindow(window);

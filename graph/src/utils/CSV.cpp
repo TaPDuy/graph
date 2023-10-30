@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 CSV::CSV(const char* path) {
 	std::cout << "reading file: " << path << std::endl;
@@ -28,4 +29,18 @@ CSV::CSV(const char* path) {
 	file.close();
 
 	this->length = data[headers[0]].size();
+}
+
+std::vector<double> CSV::normalize(const std::string& header, double min, double max) {
+
+	std::vector<double> normalized;
+	std::transform(
+		data[header].begin(), data[header].end(),
+		std::back_inserter(normalized), 
+		[min, max](double d) { 
+			return (d - min) / (max - min);
+		}
+	);
+
+	return normalized;
 }

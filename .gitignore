@@ -8,3 +8,4 @@ bin-int/
 **.vcxproj.filters
 **.vcxproj.user
 **.csproj
+/graph/imgui.ini
