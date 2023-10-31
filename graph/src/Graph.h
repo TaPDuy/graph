@@ -33,5 +33,7 @@ private:
 	std::string title;
 	std::vector<double> heightData;
 	std::vector<Plot> plots;
+
+	//int CustomMetricFormatter(double value, char* buff, int size, void* user_data);
 };
 

@@ -8,6 +8,8 @@
 #include "ImPlot/implot.h"
 #include "ImPlot/implot_internal.h"
 
+#define DELIMITER "|"
+
 Graph::Graph(const std::string& graphTitle, const std::vector<double>& height) :
 	title(graphTitle), heightData(height)
 {
@@ -21,14 +23,14 @@ std::string CustomRound(double value, double precision = 0.01) {
 }
 
 // find index of array base on value of depth
-int BinarySearch(const double* arr, int l, int r, double y) {
-	if (r >= l) {
-		int mid = l + (r - l) / 2;
-		if (int(arr[mid]) == int(y))
+int BinarySearch(const double* arr, int left, int right, double value) {
+	if (right >= left) {
+		int mid = left + (right - left) / 2;
+		if (int(arr[mid]) == int(value))
 			return mid;
-		if (arr[mid] > y)
-			return BinarySearch(arr, l, mid - 1, y);
-		return BinarySearch(arr, mid + 1, r, y);
+		if (arr[mid] > value)
+			return BinarySearch(arr, left, mid - 1, value);
+		return BinarySearch(arr, mid + 1, right, value);
 	}
 	return -1;
 }
@@ -50,21 +52,27 @@ void PlotCandlestick(const double* y_value, std::vector<Plot> plots, int count) 
 	}
 }
 
-//int CustomMetricFormatter(double value, char* buff, int size, void* user_data) {
-//	double* data = (double*)user_data;
-//	std::string metric = "";
-//	int length = data[0];
-//	std::cout << "Length: " << length << "\n";
-//	for (int i = 1; i <=length; i=i+2){
-//		value = value * (data[i] - data[i + 1]) + data[i + 1];
-//		metric += std::to_string(value);
-//		if ((i + 2) != length) {
-//			metric += ", ";
-//		}
-//	}
-//	std::cout << "Metric: " << metric << "\n";
-//	return snprintf(buff, size, metric.c_str());
-//}
+int CustomMetricFormatter(double value, char* buff, int size, void* user_data) {
+	const std::string data = (const char*)user_data;
+
+	size_t last = 0, next = 0;
+	std::string result = "";
+	std::vector<double> num_arr;
+	while ((next = data.find(DELIMITER, last)) != std::string::npos) {
+		num_arr.push_back(std::stod(data.substr(last, next - last)));
+		last = next + IM_ARRAYSIZE(DELIMITER) - 1;
+	}
+	double measure;
+	for (int i = 0; i < num_arr.size(); i = i + 2) {
+		if (i != 0) {
+			result += ", ";
+		}
+		measure = (num_arr[i] - num_arr[i + 1]) * value + num_arr[i + 1];
+		result += CustomRound(measure);
+	}
+
+	return snprintf(buff, size, result.c_str());
+}
 
 void Graph::addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool is_shaded, double base_line) {
 	std::vector<double> normalized;
@@ -97,30 +105,29 @@ void Graph::render(const char* vAxisName) {
 	double ticks[] = { 0.05, 0.5, 0.95 };
 	const char* labels[] = { start_tick.c_str(), name.c_str(), end_tick.c_str() };
 
-	std::vector<double> user_data;
-	user_data.push_back(plots.size());
+	// get max, min values of plots to use for metric formater
+	std::string user_data = "";
 	for (int i = 0; i < plots.size(); ++i) {
-		user_data.push_back(plots[i].max_value);
-		user_data.push_back(plots[i].min_value);
+		user_data.append(std::to_string(plots[i].max_value) + DELIMITER);
+		user_data.append(std::to_string(plots[i].min_value) + DELIMITER);
 	}
 
 	// draw plot
 	if (ImPlot::BeginPlot(title.c_str(), ImVec2(0, -1))) {
 		ImPlot::SetupAxes(
 			title.c_str(), vAxisName,
-			ImPlotAxisFlags_Opposite | ImPlotAxisFlags_Lock,
-			((vAxisName == nullptr) * ImPlotAxisFlags_NoDecorations) | ImPlotAxisFlags_Invert | ImPlotAxisFlags_NoSideSwitch
+			ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks,
+			((vAxisName == nullptr) * ImPlotAxisFlags_NoLabel) | ((vAxisName == nullptr) * ImPlotAxisFlags_NoTickLabels) | ImPlotAxisFlags_Invert | ImPlotAxisFlags_NoSideSwitch
 		);
 		ImPlot::SetupAxisLimits(ImAxis_X1, 0, 1);
 		ImPlot::SetupAxisLimits(ImAxis_Y1, heightData.front(), heightData.back());
 		ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, heightData.front(), heightData.back());
-		if (vAxisName != nullptr) {
-			ImPlot::SetupAxisFormat(ImAxis_Y1, "%g m");
-		}
+		ImPlot::SetupAxisFormat(ImAxis_Y1, "%g m");
 
-		/*ImPlot::SetupAxisFormat(ImAxis_X1, CustomMetricFormatter, (void*)user_data.data());*/
-
+		ImPlot::SetupAxisFormat(ImAxis_X1, CustomMetricFormatter, (void*)user_data.c_str());
 		ImPlot::SetupAxisTicks(ImAxis_X1, ticks, 3, labels, false);
+
+		ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal);
 
 		ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.2f);
 		for (Plot plot : plots) {
