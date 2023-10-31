@@ -12,8 +12,8 @@ void GraphGroup::addGraph(const std::string& name) {
 	nameMap[name] = graph;
 }
 
-void GraphGroup::addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data, double max_value, double min_value, bool is_shaded, double base_line) {
-	nameMap[graphName]->addPlot(name, data, max_value, min_value, is_shaded, base_line);
+void GraphGroup::addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data, double max_value, double min_value, bool is_shaded, double base_line, ImVec4 color) {
+	nameMap[graphName]->addPlot(name, data, max_value, min_value, is_shaded, base_line, color);
 }
 
 inline void GraphGroup::addGraph(const std::string& graphName, const std::string& dataName, const std::vector<double>& data, double max_value, double min_value) {

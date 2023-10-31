@@ -74,7 +74,7 @@ int CustomMetricFormatter(double value, char* buff, int size, void* user_data) {
 	return snprintf(buff, size, result.c_str());
 }
 
-void Graph::addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool is_shaded, double base_line) {
+void Graph::addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool is_shaded, double base_line, ImVec4 color) {
 	std::vector<double> normalized;
 
 	// take max and min value of array as max and min limits if no value is provided
@@ -85,12 +85,12 @@ void Graph::addPlot(const std::string title, const std::vector<double> data, dou
 	}
 
 	// base line if shade graph, default is 0
-	double base = 0;
+	float base = 0;
 	if (maxV > minV) {
-		base = (base_line - minV) / (maxV - minV);
+		base = float((base_line - minV) / (maxV - minV));
 	}
 
-	plots.push_back(Plot(title, normalized, maxV, minV, is_shaded, base));
+	plots.push_back(Plot(title, normalized, maxV, minV, is_shaded, base, color));
 }
 
 void Graph::render(const char* vAxisName) {
@@ -102,8 +102,8 @@ void Graph::render(const char* vAxisName) {
 		end_tick += CustomRound(plot.max_value) + "\n";
 		name += plot.title + "\n";
 	}
-	double ticks[] = { 0.05, 0.5, 0.95 };
 	const char* labels[] = { start_tick.c_str(), name.c_str(), end_tick.c_str() };
+	static double ticks[] = { 0.05, 0.5, 0.95 };
 
 	// get max, min values of plots to use for metric formater
 	std::string user_data = "";
@@ -123,20 +123,42 @@ void Graph::render(const char* vAxisName) {
 		ImPlot::SetupAxisLimits(ImAxis_Y1, heightData.front(), heightData.back());
 		ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, heightData.front(), heightData.back());
 		ImPlot::SetupAxisFormat(ImAxis_Y1, "%g m");
-
 		ImPlot::SetupAxisFormat(ImAxis_X1, CustomMetricFormatter, (void*)user_data.c_str());
 		ImPlot::SetupAxisTicks(ImAxis_X1, ticks, 3, labels, false);
-
 		ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal);
 
-		ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.2f);
-		for (Plot plot : plots) {
+		
+		for (Plot& plot : plots) {
+			if (plot.default_color && ((plot.color.x > 0) || (plot.color.y > 0) || (plot.color.z > 0))) {
+				plot.default_color = false;
+			}
+
+			ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, plot.trans);
+			if (plot.default_color) {
+				ImPlot::SetNextLineStyle(ImVec4(0, 0, 0, -1), plot.thickness);
+			}
+			else {
+				ImPlot::SetNextLineStyle(plot.color, plot.thickness);
+			}
 			if (plot.is_shaded == true) {
 				ImPlot::PlotShaded(plot.title.c_str(), plot.data.data(), heightData.data(), heightData.size(), plot.base_line, ImPlotShadedFlags_Horizontal);
 			}
 			ImPlot::PlotLine(plot.title.c_str(), plot.data.data(), heightData.data(), heightData.size());
+			ImPlot::PopStyleVar();
+
+			if (ImPlot::BeginLegendPopup(plot.title.c_str())) {
+				ImGui::Text(plot.title.c_str());
+				ImGui::ColorEdit3(("Color##" + plot.title).c_str(), &plot.color.x);
+				ImGui::SliderFloat(("Thicknes##" + plot.title).c_str(), &plot.thickness, 0, 5, "%.2f");
+				ImGui::Separator();
+				ImGui::Checkbox(("Shaded##" + plot.title).c_str(), &plot.is_shaded);
+				if (plot.is_shaded) {
+					ImGui::SliderFloat(("Transparency##" + plot.title).c_str(), &plot.trans, 0, 1, "%.2f");
+					ImGui::SliderFloat(("Baseline##" + plot.title).c_str(), &plot.base_line, 0, 1, "%.2f");
+				}
+				ImPlot::EndLegendPopup();
+			}
 		}
-		ImPlot::PopStyleVar();
 
 		// create a tooltip table
 		PlotCandlestick(heightData.data(), plots, heightData.size());

@@ -47,7 +47,7 @@ int main() {
 	GraphGroup group("Data", "Depth", csv.getColumn("DEPT"));
 	group.addGraph("##gamma-ray");
 	group.addPlot("##gamma-ray", "GR", csv.getColumn("GR"), INFINITY, 0, true, 0);
-	group.addPlot("##gamma-ray", "CAL", csv.getColumn("CALI"), 16, 0);
+	group.addPlot("##gamma-ray", "CAL", csv.getColumn("CALI"), 16, 0, false, 0, ImVec4(0.5, 0.5, 0, 1));
 
 	group.addGraph("##resistivity");
 	group.addPlot("##resistivity", "RESDEEP", csv.getColumn("ILD"), 2000, 2);
@@ -57,11 +57,6 @@ int main() {
 	group.addPlot("##density", "PE", csv.getColumn("PE"), 10, 0);
 	group.addPlot("##density", "RHOB", csv.getColumn("RHOB"), 2.95, 1.95);
 	group.addPlot("##density", "NPHI", csv.getColumn("NPHI"), 0.45, -0.15);
-
-	/*graph.addPlot("Gamma Ray 2", csv.getRow("DPHI"));
-	graph.addPlot("Gamma Ray 3", csv.getRow("NPHI"));
-	graph.addPlot("Gamma Ray 4", csv.getRow("PE"));
-	graph.addPlot("Gamma Ray 5", csv.getRow("RHOB"));*/
 
 	while (!glfwWindowShouldClose(window)) {
 
