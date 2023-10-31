@@ -10,6 +10,7 @@
 #include "utils/CSV.h"
 #include "Graph.h"
 #include "GraphGroup.h"
+#include <cmath>
 
 int main() {
 
@@ -45,17 +46,17 @@ int main() {
 
 	GraphGroup group("Data", "Depth", csv.getColumn("DEPT"));
 	group.addGraph("##gamma-ray");
-	group.addPlot("##gamma-ray", "GR", csv.normalize("GR", 0, 150));
-	group.addPlot("##gamma-ray", "CAL", csv.normalize("CALI", 0, 16));
+	group.addPlot("##gamma-ray", "GR", csv.getColumn("GR"), INFINITY, 0, true, 0);
+	group.addPlot("##gamma-ray", "CAL", csv.getColumn("CALI"), 16, 0);
 
 	group.addGraph("##resistivity");
-	group.addPlot("##resistivity", "RESDEEP", csv.normalize("ILD", 2, 2000));
-	group.addPlot("##resistivity", "RESMED", csv.normalize("ILM", 2, 2000));
+	group.addPlot("##resistivity", "RESDEEP", csv.getColumn("ILD"), 2000, 2);
+	group.addPlot("##resistivity", "RESMED", csv.getColumn("ILM"), 2000, 2);
 
 	group.addGraph("##density");
-	group.addPlot("##density", "PE", csv.normalize("PE", 0, 10));
-	group.addPlot("##density", "RHOB", csv.normalize("RHOB", 1.95, 2.95));
-	group.addPlot("##density", "NPHI", csv.normalize("NPHI", 0.45, -0.15));
+	group.addPlot("##density", "PE", csv.getColumn("PE"), 10, 0);
+	group.addPlot("##density", "RHOB", csv.getColumn("RHOB"), 2.95, 1.95);
+	group.addPlot("##density", "NPHI", csv.getColumn("NPHI"), 0.45, -0.15);
 
 	/*graph.addPlot("Gamma Ray 2", csv.getRow("DPHI"));
 	graph.addPlot("Gamma Ray 3", csv.getRow("NPHI"));

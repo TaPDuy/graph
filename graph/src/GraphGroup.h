@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include "Graph.h"
+#include <cmath>
 
 class GraphGroup
 {
@@ -12,8 +13,8 @@ public:
 	~GraphGroup();
 
 	void addGraph(const std::string& name);
-	void addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data);
-	inline void addGraph(const std::string& graphName, const std::string& dataName, const std::vector<double>& data);
+	void addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data, double max_value = INFINITY, double min_value = INFINITY, bool is_shaded = false, double base_line = 0);
+	inline void addGraph(const std::string& graphName, const std::string& dataName, const std::vector<double>& data, double max_value, double min_value);
 	void render();
 
 private:
