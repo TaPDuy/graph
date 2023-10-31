@@ -113,7 +113,7 @@ void Graph::render(const char* vAxisName) {
 	}
 
 	// draw plot
-	if (ImPlot::BeginPlot(title.c_str(), ImVec2(0, -1))) {
+	if (ImPlot::BeginPlot(title.c_str(), ImVec2(0, -1), ImPlotFlags_NoMenus)) {
 		ImPlot::SetupAxes(
 			title.c_str(), vAxisName,
 			ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks,
@@ -125,7 +125,7 @@ void Graph::render(const char* vAxisName) {
 		ImPlot::SetupAxisFormat(ImAxis_Y1, "%g m");
 		ImPlot::SetupAxisFormat(ImAxis_X1, CustomMetricFormatter, (void*)user_data.c_str());
 		ImPlot::SetupAxisTicks(ImAxis_X1, ticks, 3, labels, false);
-		ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal);
+		ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Sort);
 		
 		for (Plot& plot : plots) {
 			if (plot.default_color && ((plot.color.x > 0) || (plot.color.y > 0) || (plot.color.z > 0))) {
@@ -138,7 +138,7 @@ void Graph::render(const char* vAxisName) {
 			}
 			else {
 				ImPlot::SetNextLineStyle(plot.color, plot.thickness);
-				ImPlot::PushStyleColor(ImPlotCol_Fill, plot.color);
+				ImPlot::SetNextFillStyle(plot.color, plot.trans);
 			}
 			ImPlot::PlotLine(plot.title.c_str(), plot.data.data(), heightData.data(), heightData.size());
 			if (plot.is_shaded == true) {
