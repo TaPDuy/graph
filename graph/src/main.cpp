@@ -7,14 +7,10 @@
 #include <ImGui/imgui_impl_opengl3.h>
 
 #include <ImPlot/implot.h>
-#include "utils/CSV.h"
-#include "Graph.h"
-#include "GraphGroup.h"
 #include <cmath>
+#include "GraphWindow.h"
 
 int main() {
-
-	CSV csv("assets/data.csv");
 
 	glfwInit();
 	const char* glsl_version = "#version 330 core";
@@ -22,9 +18,8 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(1280, 720, "Imgui", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800, 800, "Imgui", nullptr, nullptr);
 	if (window == nullptr) {
 		glfwTerminate();
 		return -1;
@@ -44,24 +39,8 @@ int main() {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	GraphGroup group("Data", "Depth", csv.getColumn("DEPT"));
-	group.addGraph("##gamma-ray");
-	group.addPlot("##gamma-ray", "GR", csv.getColumn("GR"), INFINITY, 0, true, 0);
-	group.addPlot("##gamma-ray", "CAL", csv.getColumn("CALI"), 16, 0);
-
-	group.addGraph("##resistivity");
-	group.addPlot("##resistivity", "RESDEEP", csv.getColumn("ILD"), 2000, 2);
-	group.addPlot("##resistivity", "RESMED", csv.getColumn("ILM"), 2000, 2);
-
-	group.addGraph("##density");
-	group.addPlot("##density", "PE", csv.getColumn("PE"), 10, 0);
-	group.addPlot("##density", "RHOB", csv.getColumn("RHOB"), 2.95, 1.95);
-	group.addPlot("##density", "NPHI", csv.getColumn("NPHI"), 0.45, -0.15);
-
-	/*graph.addPlot("Gamma Ray 2", csv.getRow("DPHI"));
-	graph.addPlot("Gamma Ray 3", csv.getRow("NPHI"));
-	graph.addPlot("Gamma Ray 4", csv.getRow("PE"));
-	graph.addPlot("Gamma Ray 5", csv.getRow("RHOB"));*/
+	GraphWindow graph("Graph");
+	graph.init();
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -71,12 +50,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		/*ImGui::ShowDemoWindow();*/
-		ImPlot::ShowDemoWindow();
-
-		ImGui::Begin("Visualizer");
-		group.render();
-		ImGui::End();
+		graph.render(window);
 
 		ImGui::Render();
 
