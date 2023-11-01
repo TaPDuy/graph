@@ -10,8 +10,8 @@ GraphWindow::GraphWindow(const std::string& title) :
 
 void GraphWindow::init() {
 	group.addGraph("##gamma-ray");
-	group.addPlot("##gamma-ray", "GR", csv.getColumn("GR"), INFINITY, 0, true, 0);
-	group.addPlot("##gamma-ray", "CAL", csv.getColumn("CALI"), 16, 0);
+	group.addPlot("##gamma-ray", "GR", csv.getColumn("GR"), INFINITY, 0, false, true, 0);
+	group.addPlot("##gamma-ray", "CAL", csv.getColumn("CALI"), 16, 0, true);
 
 	group.addGraph("##resistivity");
 	group.addPlot("##resistivity", "RESDEEP", csv.getColumn("ILD"), 2000, 2);
