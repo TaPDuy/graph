@@ -164,10 +164,9 @@ void Graph::render(const char* vAxisName) {
 			ImPlot::PopStyleVar(2);
 
 			if (ImPlot::BeginLegendPopup(plot.title.c_str())) {
-				ImGui::Text(plot.title.c_str());
-				ImGui::Separator();
 				ImGui::Checkbox(("Reversed##" + plot.title).c_str(), &plot.reversed);
 				ImGui::Separator();
+				ImGui::Text(plot.title.c_str());
 				ImGui::ColorEdit3(("Color##" + plot.title).c_str(), &plot.color.x);
 				ImGui::SliderFloat(("Thicknes##" + plot.title).c_str(), &plot.thickness, 1, 5, "%.2f");
 				ImGui::Separator();
