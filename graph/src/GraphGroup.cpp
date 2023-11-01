@@ -22,7 +22,13 @@ inline void GraphGroup::addGraph(const std::string& graphName, const std::string
 }
 
 void GraphGroup::render() {
-	if (ImPlot::BeginSubplots(title.c_str(), 1, graphs.size(), ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY)) {
+	if (ImGui::BeginTabBar(title.c_str())) {
+		for (auto it = graphs.begin(); it < graphs.end(); ++it) {
+			(*it)->render(heightTitle.c_str());
+		}
+		ImGui::EndTabBar();
+	}
+	/*if (ImPlot::BeginSubplots(title.c_str(), 1, graphs.size(), ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY)) {
 
 		for (auto it = graphs.begin(); it < graphs.end(); ++it) {
 			if (it != graphs.begin())
@@ -31,7 +37,7 @@ void GraphGroup::render() {
 				(*it)->render(heightTitle.c_str());
 		}
 		ImPlot::EndSubplots();
-	}
+	}*/
 }
 
 GraphGroup::~GraphGroup() {
