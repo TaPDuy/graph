@@ -9,3 +9,4 @@ bin-int/
 **.vcxproj.user
 **.csproj
 /graph/imgui.ini
+enc_temp_folder/
