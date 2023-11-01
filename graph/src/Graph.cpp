@@ -190,3 +190,7 @@ void Graph::render(const char* vAxisName) {
 		ImPlot::EndPlot();
 	}
 }
+
+std::string Graph::getTitle() {
+	return title;
+}

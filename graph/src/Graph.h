@@ -53,6 +53,7 @@ public:
 	Graph(const std::string& graphTitle, const std::vector<double>& height);
 	void addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool reversed = false, bool is_shaded = false, double base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1));
 	void render(const char* vAxisName);
+	std::string getTitle();
 
 private:
 	std::string title;
