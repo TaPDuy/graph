@@ -23,14 +23,14 @@ std::string CustomRound(double value, double precision = 0.01) {
 }
 
 // find index of array base on value of depth
-int BinarySearch(const double* arr, int left, int right, double value) {
+int BinarySearch(const double* arr, int left, int right, double value, double gap) {
 	if (right >= left) {
 		int mid = left + (right - left) / 2;
-		if (int(arr[mid]) == int(value))
+		if (abs(arr[mid] - value) < gap)
 			return mid;
 		if (arr[mid] > value)
-			return BinarySearch(arr, left, mid - 1, value);
-		return BinarySearch(arr, mid + 1, right, value);
+			return BinarySearch(arr, left, mid - 1, value, gap);
+		return BinarySearch(arr, mid + 1, right, value, gap);
 	}
 	return -1;
 }
@@ -39,7 +39,11 @@ int BinarySearch(const double* arr, int left, int right, double value) {
 void PlotCandlestick(const double* y_value, std::vector<Plot> plots, int count) {
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
-		int idx = BinarySearch(y_value, 0, count - 1, mouse.y);
+		double gap = 0.5;
+		if (count > 1) {
+			gap = abs(y_value[0] - y_value[1]) / 2;
+		}
+		int idx = BinarySearch(y_value, 0, count - 1, mouse.y, gap);
 		if (idx != -1) {
 			ImGui::BeginTooltip();
 			ImGui::Text("Depth: %.2f m", y_value[idx]);
