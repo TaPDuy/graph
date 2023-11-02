@@ -5,6 +5,8 @@
 #include <vector>
 #include <cmath>
 
+#include <iostream>
+
 struct Plot
 {
 	std::string title;
@@ -12,33 +14,51 @@ struct Plot
 
 	bool is_shaded;
 	float base_line;
-	double max_value;
-	double min_value;
+	float top_limit;
+	float bottom_limit;
 	ImVec4 color;
 	float trans;
 	float thickness;
 	bool reversed;
 	bool display;
+	double min_value;
+	double max_value;
 
-	Plot(const std::string& title, const std::vector<double>& data, double max_value, double min_value, bool reversed = false, bool is_shaded = false, float base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1)) :
-		title(title), data(data), is_shaded(is_shaded), base_line(base_line), max_value(max_value), min_value(min_value), color(color), reversed(reversed) {
+	Plot(const std::string& title, const std::vector<double>& data, double top_limit, double bottom_limit, bool reversed = false, bool is_shaded = false, float base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1)) :
+		title(title), data(data), is_shaded(is_shaded), base_line(base_line), top_limit((float)top_limit), bottom_limit((float)bottom_limit), color(color), reversed(reversed) {
 		if (reversed && base_line == 0) {
 			base_line = 1;
 		}
 		trans = 0.2;
 		thickness = 1;
 		display = false;
+		double min = data[0], max = data[0];
+		for (int i = 1; i < data.size(); ++i) {
+			if (min > data[i]) min = data[i];
+			if (max < data[i]) max = data[i];
+		}
+		min_value = ((min > 0) ? 0 : min);
+		max_value = max;
 	}
 	
 	std::vector<double> getData() {
-		if (reversed) {
-			std::vector<double> new_data;
+		if (bottom_limit >= top_limit) {
+			base_line = 0;
+			std::vector<double> result;
 			for (int i = 0; i < data.size(); ++i) {
-				new_data.push_back(1.0 - data[i]);
+				result.push_back(0);
 			}
-			return new_data;
+			return result;
 		}
-		return data;
+		std::vector<double> normalized;
+		for (int i = 0; i < data.size(); ++i) {
+			double cell_value = (data[i] - bottom_limit) / (top_limit - bottom_limit);
+			if (reversed) {
+				cell_value = 1 - cell_value;
+			}
+			normalized.push_back(cell_value);
+		}
+		return normalized;
 	}
 };
 
@@ -46,7 +66,7 @@ class Graph
 {
 public:
 	Graph(const std::string& graphTitle, const std::vector<double>& height);
-	void addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool reversed = false, bool is_shaded = false, double base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1));
+	void addPlot(const std::string title, const std::vector<double> data, double top_limit, double bottom_limit, bool reversed = false, bool is_shaded = false, double base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1));
 	void render(const char* vAxisName);
 
 private:

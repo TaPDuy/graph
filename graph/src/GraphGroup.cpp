@@ -12,13 +12,13 @@ void GraphGroup::addGraph(const std::string& name) {
 	nameMap[name] = graph;
 }
 
-void GraphGroup::addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data, double max_value, double min_value, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
-	nameMap[graphName]->addPlot(name, data, max_value, min_value, reversed, is_shaded, base_line, color);
+void GraphGroup::addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data, double top_limit, double bottom_limit, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
+	nameMap[graphName]->addPlot(name, data, top_limit, bottom_limit, reversed, is_shaded, base_line, color);
 }
 
-inline void GraphGroup::addGraph(const std::string& graphName, const std::string& dataName, const std::vector<double>& data, double max_value, double min_value) {
+inline void GraphGroup::addGraph(const std::string& graphName, const std::string& dataName, const std::vector<double>& data, double top_limit, double bottom_limit) {
 	addGraph(graphName);
-	addPlot(graphName, dataName, data, max_value, min_value);
+	addPlot(graphName, dataName, data, top_limit, bottom_limit);
 }
 
 void GraphGroup::render() {

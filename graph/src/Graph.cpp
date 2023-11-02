@@ -11,10 +11,7 @@
 #define DELIMITER "|"
 
 Graph::Graph(const std::string& graphTitle, const std::vector<double>& height) :
-	title(graphTitle), heightData(height)
-{
-
-}
+	title(graphTitle), heightData(height) {}
 
 // generate random double
 double RandDouble(int min_value, int max_value) {
@@ -55,7 +52,8 @@ void PlotCandlestick(const double* y_value, std::vector<Plot> plots, int count) 
 			ImGui::Text("Depth: %.2f m", y_value[idx]);
 			for (int i = 0; i < plots.size(); ++i) {
 				if (!plots[i].display) continue;
-				double value = plots[i].data[idx] * (plots[i].max_value - plots[i].min_value) + (plots[i].min_value);
+				// double value = plots[i].data[idx] * (plots[i].top_limit - plots[i].bottom_limit) + (plots[i].bottom_limit);
+				double value = plots[i].data[idx];
 				ImGui::Text((plots[i].title + ": %.2f").c_str(), value);
 			}
 			ImGui::EndTooltip();
@@ -90,20 +88,18 @@ int CustomMetricFormatter(double value, char* buff, int size, void* user_data) {
 	return snprintf(buff, size, result.c_str());
 }
 
-void Graph::addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
-	std::vector<double> normalized;
-
+void Graph::addPlot(const std::string title, const std::vector<double> data, double top_limit, double bottom_limit, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
 	// take max and min value of array as max and min limits if no value is provided
-	double maxV = ((max_value != (INFINITY)) ? max_value : *std::max_element(data.begin(), data.end()));
-	double minV = ((min_value != (INFINITY)) ? min_value : *std::min_element(data.begin(), data.end()));
-	for (int i = 0; i < data.size(); ++i) {
-		normalized.push_back((data[i] - minV) / (maxV - minV));
+	if (bottom_limit >= top_limit) {
+		bottom_limit = INFINITY;
+		top_limit = INFINITY;
 	}
+	double top = ((top_limit != (INFINITY)) ? top_limit : *std::max_element(data.begin(), data.end()));
+	double bottom = ((bottom_limit != (INFINITY)) ? bottom_limit : *std::min_element(data.begin(), data.end()));
 
-	// base line if shade graph, default is 0
 	float base = 0;
-	if (maxV > minV) {
-		base = float((base_line - minV) / (maxV - minV));
+	if ((top >= base_line) && (base_line >= bottom)) {
+		base = float((base_line - bottom) / (top - bottom));
 	}
 
 	double x_color = color.x, y_color = color.y, z_color = color.z;
@@ -114,22 +110,21 @@ void Graph::addPlot(const std::string title, const std::vector<double> data, dou
 	}
 	ImVec4 new_color = ImVec4(x_color, y_color, z_color, 1);
 
-	plots.push_back(Plot(title, normalized, maxV, minV, reversed, is_shaded, base, new_color));
+	plots.push_back(Plot(title, data, top, bottom, reversed, is_shaded, base, new_color));
 }
 
 void Graph::render(const char* vAxisName) {
-
 	// custom tick at the start and the end of X-axis
 	std::string start_tick = "", end_tick = "", name = "";
 	for (Plot plot : plots) {
 		if (!plot.display) continue;
 		if (plot.reversed) {
-			start_tick += CustomRound(plot.max_value) + "\n";
-			end_tick += CustomRound(plot.min_value) + "\n";
+			start_tick += CustomRound(plot.top_limit) + "\n";
+			end_tick += CustomRound(plot.bottom_limit) + "\n";
 		}
 		else {
-			start_tick += CustomRound(plot.min_value) + "\n";
-			end_tick += CustomRound(plot.max_value) + "\n";
+			start_tick += CustomRound(plot.bottom_limit) + "\n";
+			end_tick += CustomRound(plot.top_limit) + "\n";
 		}
 		name += plot.title + "\n";
 	}
@@ -141,21 +136,21 @@ void Graph::render(const char* vAxisName) {
 	for (int i = 0; i < plots.size(); ++i) {
 		if (!plots[i].display) continue;
 		if (plots[i].reversed) {
-			user_data.append(std::to_string(plots[i].min_value) + DELIMITER);
-			user_data.append(std::to_string(plots[i].max_value) + DELIMITER);
+			user_data.append(std::to_string(plots[i].bottom_limit) + DELIMITER);
+			user_data.append(std::to_string(plots[i].top_limit) + DELIMITER);
 		}
 		else {
-			user_data.append(std::to_string(plots[i].max_value) + DELIMITER);
-			user_data.append(std::to_string(plots[i].min_value) + DELIMITER);
+			user_data.append(std::to_string(plots[i].top_limit) + DELIMITER);
+			user_data.append(std::to_string(plots[i].bottom_limit) + DELIMITER);
 		}
 	}
 
 	// draw plot
 	if (ImGui::BeginTabItem(title.c_str())) {
 		{
-			ImGui::BeginChild("Selectables Area", ImVec2(100, 400));
+			ImGui::BeginChild(("Selectables Area" + title).c_str(), ImVec2(100, -1));
 			ImGui::Spacing();
-			if (ImGui::Button(("Reset legend##" + title).c_str())) {
+			if (ImGui::Button(("Reset legends##" + title).c_str())) {
 				for (int i = 0; i < plots.size(); ++i) {
 					plots[i].display = false;
 				}
@@ -188,7 +183,7 @@ void Graph::render(const char* vAxisName) {
 		ImGui::SameLine();
 
 		{
-			ImGui::BeginChild("Plot Area");
+			ImGui::BeginChild(("Plot Area" + title).c_str());
 			if (ImPlot::BeginPlot(title.c_str(), ImVec2(-1, -1), ImPlotFlags_NoMenus)) {
 				ImPlot::SetupAxes(
 					title.c_str(), vAxisName,
@@ -209,7 +204,12 @@ void Graph::render(const char* vAxisName) {
 					ImPlot::PlotLine(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size());
 					if (plots[i].is_shaded == true) {
 						ImPlot::SetNextFillStyle(plots[i].color, plots[i].trans);
-						ImPlot::PlotShaded(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size(), plots[i].base_line, ImPlotShadedFlags_Horizontal);
+						if (!plots[i].reversed) {
+							ImPlot::PlotShaded(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size(), plots[i].base_line, ImPlotShadedFlags_Horizontal);
+						}
+						else {
+							ImPlot::PlotShaded(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size(), 1 - plots[i].base_line, ImPlotShadedFlags_Horizontal);
+						}
 					}
 
 					if (ImPlot::BeginDragDropSourceItem(plots[i].title.c_str())) {
@@ -225,13 +225,20 @@ void Graph::render(const char* vAxisName) {
 						ImGui::Separator();
 						ImGui::Checkbox(("Reversed##" + plots[i].title).c_str(), &plots[i].reversed);
 						ImGui::Separator();
+						ImGui::DragFloatRange2(("Limit##" + plots[i].title).c_str(), &plots[i].bottom_limit, &plots[i].top_limit, 0.25f, 0.0f, 0.0f, "Min %.2f", "Max %.2f", ImGuiSliderFlags_AlwaysClamp);
+						ImGui::Separator();
 						ImGui::ColorEdit3(("Color##" + plots[i].title).c_str(), &plots[i].color.x);
 						ImGui::SliderFloat(("Thicknes##" + plots[i].title).c_str(), &plots[i].thickness, 1, 5, "%.2f");
 						ImGui::Separator();
 						ImGui::Checkbox(("Shaded##" + plots[i].title).c_str(), &plots[i].is_shaded);
 						if (plots[i].is_shaded) {
 							ImGui::SliderFloat(("Transparency##" + plots[i].title).c_str(), &plots[i].trans, 0, 1, "%.2f");
-							ImGui::SliderFloat(("Baseline##" + plots[i].title).c_str(), &plots[i].base_line, 0, 1, "%.2f");
+							if (plots[i].reversed) {
+								ImGui::SliderFloat(("Baseline##" + plots[i].title).c_str(), &plots[i].base_line, 1, 0, "%.2f");
+							}
+							else {
+								ImGui::SliderFloat(("Baseline##" + plots[i].title).c_str(), &plots[i].base_line, 0, 1, "%.2f");
+							}
 						}
 						ImPlot::EndLegendPopup();
 					}
