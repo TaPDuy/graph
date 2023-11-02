@@ -168,6 +168,7 @@ void Graph::render(const char* vAxisName) {
 						ImGui::Text(plots[i].title.c_str());
 						ImGui::EndDragDropSource();
 					}
+					ImGui::SetItemTooltip("Drag to plot to display");
 				}
 			}
 			ImGui::EndChild();
