@@ -16,6 +16,12 @@ Graph::Graph(const std::string& graphTitle, const std::vector<double>& height) :
 
 }
 
+// generate random double
+double randDouble(int min_value, int max_value) {
+	if (min_value >= max_value) return 1.0;
+	return double(min_value + (std::rand() % (int)(max_value - min_value + 1)));
+}
+
 // custom round function
 std::string CustomRound(double value, double precision = 0.01) {
 	std::string new_value = std::to_string(std::round(value / precision) * precision);
@@ -48,6 +54,7 @@ void PlotCandlestick(const double* y_value, std::vector<Plot> plots, int count) 
 			ImGui::BeginTooltip();
 			ImGui::Text("Depth: %.2f m", y_value[idx]);
 			for (int i = 0; i < plots.size(); ++i) {
+				if (!plots[i].display) continue;
 				double value = plots[i].data[idx] * (plots[i].max_value - plots[i].min_value) + (plots[i].min_value);
 				ImGui::Text((plots[i].title + ": %.2f").c_str(), value);
 			}
@@ -99,7 +106,17 @@ void Graph::addPlot(const std::string title, const std::vector<double> data, dou
 		base = float((base_line - minV) / (maxV - minV));
 	}
 
-	plots.push_back(Plot(title, normalized, maxV, minV, reversed, is_shaded, base, color));
+	double x_color, y_color, z_color;
+	if ((color.x + color.y + color.z) == 0) {
+		do {
+			x_color = randDouble(0, 100) / 100;
+			y_color = randDouble(0, 100) / 100;
+			z_color = randDouble(0, 100) / 100;
+		} while ((x_color + y_color + z_color) == 0);
+	}
+	ImVec4 new_color = ImVec4(x_color, y_color, z_color, 1);
+
+	plots.push_back(Plot(title, normalized, maxV, minV, reversed, is_shaded, base, new_color));
 }
 
 void Graph::render(const char* vAxisName) {
@@ -107,6 +124,7 @@ void Graph::render(const char* vAxisName) {
 	// custom tick at the start and the end of X-axis
 	std::string start_tick = "", end_tick = "", name = "";
 	for (Plot plot : plots) {
+		if (!plot.display) continue;
 		if (plot.reversed) {
 			start_tick += CustomRound(plot.max_value) + "\n";
 			end_tick += CustomRound(plot.min_value) + "\n";
@@ -123,6 +141,7 @@ void Graph::render(const char* vAxisName) {
 	// get max, min values of plots to use for metric formater
 	std::string user_data = "";
 	for (int i = 0; i < plots.size(); ++i) {
+		if (!plots[i].display) continue;
 		if (plots[i].reversed) {
 			user_data.append(std::to_string(plots[i].min_value) + DELIMITER);
 			user_data.append(std::to_string(plots[i].max_value) + DELIMITER);
@@ -135,61 +154,105 @@ void Graph::render(const char* vAxisName) {
 
 	// draw plot
 	if (ImGui::BeginTabItem(title.c_str())) {
-		std::cout << title << "\n";
-		if (ImPlot::BeginPlot(title.c_str(), ImVec2(-1, -1), ImPlotFlags_NoMenus)) {
-			ImPlot::SetupAxes(
-				title.c_str(), vAxisName,
-				ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks,
-				((vAxisName == nullptr) * ImPlotAxisFlags_NoLabel) | ((vAxisName == nullptr) * ImPlotAxisFlags_NoTickLabels) | ImPlotAxisFlags_Invert | ImPlotAxisFlags_NoSideSwitch
-			);
-			ImPlot::SetupAxisLimits(ImAxis_X1, 0, 1);
-			ImPlot::SetupAxisLimits(ImAxis_Y1, heightData.front(), heightData.back());
-			ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, heightData.front(), heightData.back());
-			ImPlot::SetupAxisFormat(ImAxis_Y1, "%g m");
-			ImPlot::SetupAxisFormat(ImAxis_X1, CustomMetricFormatter, (void*)user_data.c_str());
-			ImPlot::SetupAxisTicks(ImAxis_X1, ticks, 3, labels, false);
-			ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Sort);
-
-			for (Plot& plot : plots) {
-				if (plot.default_color && ((plot.color.x > 0) || (plot.color.y > 0) || (plot.color.z > 0))) {
-					plot.default_color = false;
-				}
-
-				ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, plot.trans);
-				ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, plot.thickness);
-				if (!plot.default_color) {
-					ImPlot::SetNextLineStyle(plot.color, plot.thickness);
-				}
-				ImPlot::PlotLine(plot.title.c_str(), plot.getData().data(), heightData.data(), heightData.size());
-				if (plot.is_shaded == true) {
-					if (!plot.default_color) {
-						ImPlot::SetNextFillStyle(plot.color, plot.trans);
-					}
-					ImPlot::PlotShaded(plot.title.c_str(), plot.getData().data(), heightData.data(), heightData.size(), plot.base_line, ImPlotShadedFlags_Horizontal);
-				}
-				ImPlot::PopStyleVar(2);
-
-				if (ImPlot::BeginLegendPopup(plot.title.c_str())) {
-					ImGui::Text(plot.title.c_str());
-					ImGui::Separator();
-					ImGui::Checkbox(("Reversed##" + plot.title).c_str(), &plot.reversed);
-					ImGui::Separator();
-					ImGui::ColorEdit3(("Color##" + plot.title).c_str(), &plot.color.x);
-					ImGui::SliderFloat(("Thicknes##" + plot.title).c_str(), &plot.thickness, 1, 5, "%.2f");
-					ImGui::Separator();
-					ImGui::Checkbox(("Shaded##" + plot.title).c_str(), &plot.is_shaded);
-					if (plot.is_shaded) {
-						ImGui::SliderFloat(("Transparency##" + plot.title).c_str(), &plot.trans, 0, 1, "%.2f");
-						ImGui::SliderFloat(("Baseline##" + plot.title).c_str(), &plot.base_line, 0, 1, "%.2f");
-					}
-					ImPlot::EndLegendPopup();
+		{
+			ImGui::BeginChild("Selectables Area", ImVec2(100, 400));
+			ImGui::Spacing();
+			if (ImGui::Button(("Reset legend##" + title).c_str())) {
+				for (int i = 0; i < plots.size(); ++i) {
+					plots[i].display = false;
 				}
 			}
+			ImGui::Spacing(); ImGui::Spacing();
+			for (int i = 0; i < plots.size(); ++i) {
+				if (!plots[i].display) {
+					ImPlot::ItemIcon(plots[i].color);
+					ImGui::SameLine();
+					ImGui::Selectable(plots[i].title.c_str(), false, 0, ImVec2(100, 0));
+					if (ImGui::BeginDragDropSource()) {
+						ImGui::SetDragDropPayload(("PLOT_PAYLOAD" + title).c_str(), &i, sizeof(int));
+						ImPlot::ItemIcon(plots[i].color);
+						ImGui::SameLine();
+						ImGui::Text(plots[i].title.c_str());
+						ImGui::EndDragDropSource();
+					}
+				}
+			}
+			ImGui::EndChild();
+			if (ImGui::BeginDragDropTarget()) {
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(("PLOT_PAYLOAD" + title).c_str())) {
+					int index = *(int*)payload->Data;
+					plots[index].display = false;
+				}
+				ImGui::EndDragDropTarget();
+			}
+		}
 
-			// create a tooltip table
-			PlotCandlestick(heightData.data(), plots, heightData.size());
+		ImGui::SameLine();
 
-			ImPlot::EndPlot();
+		{
+			ImGui::BeginChild("Plot Area");
+			if (ImPlot::BeginPlot(title.c_str(), ImVec2(-1, -1), ImPlotFlags_NoMenus)) {
+				ImPlot::SetupAxes(
+					title.c_str(), vAxisName,
+					ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks,
+					((vAxisName == nullptr) * ImPlotAxisFlags_NoLabel) | ((vAxisName == nullptr) * ImPlotAxisFlags_NoTickLabels) | ImPlotAxisFlags_Invert | ImPlotAxisFlags_NoSideSwitch
+				);
+				ImPlot::SetupAxisLimits(ImAxis_X1, 0, 1);
+				ImPlot::SetupAxisLimits(ImAxis_Y1, heightData.front(), heightData.back());
+				ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, heightData.front(), heightData.back());
+				ImPlot::SetupAxisFormat(ImAxis_Y1, "%g m");
+				ImPlot::SetupAxisFormat(ImAxis_X1, CustomMetricFormatter, (void*)user_data.c_str());
+				ImPlot::SetupAxisTicks(ImAxis_X1, ticks, 3, labels, false);
+				ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Sort);
+
+				for (int i = 0; i < plots.size(); ++i) {
+					if (!plots[i].display) continue;
+					ImPlot::SetNextLineStyle(plots[i].color, plots[i].thickness);
+					ImPlot::PlotLine(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size());
+					if (plots[i].is_shaded == true) {
+						ImPlot::SetNextFillStyle(plots[i].color, plots[i].trans);
+						ImPlot::PlotShaded(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size(), plots[i].base_line, ImPlotShadedFlags_Horizontal);
+					}
+
+					if (ImPlot::BeginDragDropSourceItem(plots[i].title.c_str())) {
+						ImGui::SetDragDropPayload(("PLOT_PAYLOAD" + title).c_str(), &i, sizeof(int));
+						ImPlot::ItemIcon(plots[i].color);
+						ImGui::SameLine();
+						ImGui::Text(plots[i].title.c_str());
+						ImPlot::EndDragDropSource();
+					}
+
+					if (ImPlot::BeginLegendPopup(plots[i].title.c_str())) {
+						ImGui::Text(plots[i].title.c_str());
+						ImGui::Separator();
+						ImGui::Checkbox(("Reversed##" + plots[i].title).c_str(), &plots[i].reversed);
+						ImGui::Separator();
+						ImGui::ColorEdit3(("Color##" + plots[i].title).c_str(), &plots[i].color.x);
+						ImGui::SliderFloat(("Thicknes##" + plots[i].title).c_str(), &plots[i].thickness, 1, 5, "%.2f");
+						ImGui::Separator();
+						ImGui::Checkbox(("Shaded##" + plots[i].title).c_str(), &plots[i].is_shaded);
+						if (plots[i].is_shaded) {
+							ImGui::SliderFloat(("Transparency##" + plots[i].title).c_str(), &plots[i].trans, 0, 1, "%.2f");
+							ImGui::SliderFloat(("Baseline##" + plots[i].title).c_str(), &plots[i].base_line, 0, 1, "%.2f");
+						}
+						ImPlot::EndLegendPopup();
+					}
+				}
+
+				if (ImPlot::BeginDragDropTargetPlot()) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(("PLOT_PAYLOAD" + title).c_str())) {
+						int index = *(int*)payload->Data;
+						plots[index].display = true;
+					}
+					ImPlot::EndDragDropTarget();
+				}
+
+				// create a tooltip table
+				PlotCandlestick(heightData.data(), plots, heightData.size());
+
+				ImPlot::EndPlot();
+			}
+			ImGui::EndChild();
 		}
 		ImGui::EndTabItem();
 	}

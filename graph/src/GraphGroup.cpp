@@ -28,16 +28,6 @@ void GraphGroup::render() {
 		}
 		ImGui::EndTabBar();
 	}
-	/*if (ImPlot::BeginSubplots(title.c_str(), 1, graphs.size(), ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY)) {
-
-		for (auto it = graphs.begin(); it < graphs.end(); ++it) {
-			if (it != graphs.begin())
-				(*it)->render(nullptr);
-			else
-				(*it)->render(heightTitle.c_str());
-		}
-		ImPlot::EndSubplots();
-	}*/
 }
 
 GraphGroup::~GraphGroup() {
