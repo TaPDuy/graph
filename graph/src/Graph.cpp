@@ -17,7 +17,7 @@ Graph::Graph(const std::string& graphTitle, const std::vector<double>& height) :
 }
 
 // generate random double
-double randDouble(int min_value, int max_value) {
+double RandDouble(int min_value, int max_value) {
 	if (min_value >= max_value) return 1.0;
 	return double(min_value + (std::rand() % (int)(max_value - min_value + 1)));
 }
@@ -106,13 +106,11 @@ void Graph::addPlot(const std::string title, const std::vector<double> data, dou
 		base = float((base_line - minV) / (maxV - minV));
 	}
 
-	double x_color, y_color, z_color;
-	if ((color.x + color.y + color.z) == 0) {
-		do {
-			x_color = randDouble(0, 100) / 100;
-			y_color = randDouble(0, 100) / 100;
-			z_color = randDouble(0, 100) / 100;
-		} while ((x_color + y_color + z_color) == 0);
+	double x_color = color.x, y_color = color.y, z_color = color.z;
+	while ((x_color + y_color + z_color) == 0) {
+		x_color = RandDouble(0, 100) / 100;
+		y_color = RandDouble(0, 100) / 100;
+		z_color = RandDouble(0, 100) / 100;
 	}
 	ImVec4 new_color = ImVec4(x_color, y_color, z_color, 1);
 
