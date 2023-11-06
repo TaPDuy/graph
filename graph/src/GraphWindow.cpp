@@ -22,7 +22,7 @@ void GraphWindow::init() {
 	group.addPlot("density", "RHOB", csv.getColumn("RHOB"), 2.95, 1.95);
 	group.addPlot("density", "NPHI", csv.getColumn("NPHI"), 0.45, -0.15);
 
-	// group.addHeatMapGraph("Electrofacies", csv.getColumn("Electrofacies"));
+	group.addHeatMapGraph("Electrofacies", csv.getColumn("Electrofacies"));
 }
 
 void GraphWindow::render(GLFWwindow* window) {

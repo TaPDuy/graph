@@ -27,14 +27,6 @@ inline void GraphGroup::addGraph(const std::string& graphName, const std::string
 	addPlot(graphName, dataName, data, max_value, min_value);
 }
 
-int GraphGroup::getColumns() {
-	int count = 0;
-	for (auto const& imap : display) {
-		count += imap.second;
-	}
-	return count;
-}
-
 void GraphGroup::render() {
 	if (ImGui::BeginTable("##graph_select", 4, ImGuiTableFlags_BordersOuter)) {
 		for (int i = 0; i < graphs.size(); ++i) {
@@ -52,7 +44,7 @@ void GraphGroup::render() {
 	ImGui::Spacing(); ImGui::Spacing();
 	bool display_y_axis = true;
 
-	if (ImPlot::BeginSubplots(title.c_str(), 1, getColumns(), ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY)) {
+	if (ImPlot::BeginSubplots(title.c_str(), 1, (graphs.size() + heatmap_graphs.size()), ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY)) {
 		for (auto it = graphs.begin(); it < graphs.end(); ++it) {
 			if (!display[(*it)->getTitle()]) {
 				continue;
