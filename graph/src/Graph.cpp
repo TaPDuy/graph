@@ -16,6 +16,12 @@ Graph::Graph(const std::string& graphTitle, const std::vector<double>& height) :
 
 }
 
+// generate random double
+double RandDouble(int min_value, int max_value) {
+	if (min_value >= max_value) return 1.0;
+	return double(min_value + (std::rand() % (int)(max_value - min_value + 1)));
+}
+
 // custom round function
 std::string CustomRound(double value, double precision = 0.01) {
 	std::string new_value = std::to_string(std::round(value / precision) * precision);
@@ -48,7 +54,7 @@ void PlotCandlestick(const double* y_value, std::vector<Plot> plots, int count) 
 			ImGui::BeginTooltip();
 			ImGui::Text("Depth: %.2f m", y_value[idx]);
 			for (int i = 0; i < plots.size(); ++i) {
-				double value = plots[i].data[idx] * (plots[i].max_value - plots[i].min_value) + (plots[i].min_value);
+				double value = plots[i].data[idx];
 				ImGui::Text((plots[i].title + ": %.2f").c_str(), value);
 			}
 			ImGui::EndTooltip();
@@ -83,23 +89,29 @@ int CustomMetricFormatter(double value, char* buff, int size, void* user_data) {
 	return snprintf(buff, size, result.c_str());
 }
 
-void Graph::addPlot(const std::string title, const std::vector<double> data, double max_value, double min_value, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
-	std::vector<double> normalized;
-
+void Graph::addPlot(const std::string title, const std::vector<double> data, double top_limit, double bottom_limit, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
 	// take max and min value of array as max and min limits if no value is provided
-	double maxV = ((max_value != (INFINITY)) ? max_value : *std::max_element(data.begin(), data.end()));
-	double minV = ((min_value != (INFINITY)) ? min_value : *std::min_element(data.begin(), data.end()));
-	for (int i = 0; i < data.size(); ++i) {
-		normalized.push_back((data[i] - minV) / (maxV - minV));
+	if (bottom_limit >= top_limit) {
+		bottom_limit = INFINITY;
+		top_limit = INFINITY;
 	}
+	double top = ((top_limit != (INFINITY)) ? top_limit : *std::max_element(data.begin(), data.end()));
+	double bottom = ((bottom_limit != (INFINITY)) ? bottom_limit : *std::min_element(data.begin(), data.end()));
 
-	// base line if shade graph, default is 0
 	float base = 0;
-	if (maxV > minV) {
-		base = float((base_line - minV) / (maxV - minV));
+	if ((top >= base_line) && (base_line >= bottom)) {
+		base = float((base_line - bottom) / (top - bottom));
 	}
 
-	plots.push_back(Plot(title, normalized, maxV, minV, reversed, is_shaded, base, color));
+	double x_color = color.x, y_color = color.y, z_color = color.z;
+	while ((x_color + y_color + z_color) == 0) {
+		x_color = RandDouble(0, 100) / 100;
+		y_color = RandDouble(0, 100) / 100;
+		z_color = RandDouble(0, 100) / 100;
+	}
+	ImVec4 new_color = ImVec4(x_color, y_color, z_color, 1);
+
+	plots.push_back(Plot(title, data, top, bottom, reversed, is_shaded, base, new_color));
 }
 
 void Graph::render(const char* vAxisName) {
@@ -148,37 +160,38 @@ void Graph::render(const char* vAxisName) {
 		ImPlot::SetupAxisTicks(ImAxis_X1, ticks, 3, labels, false);
 		ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Sort);
 		
-		for (Plot& plot : plots) {
-			if (plot.default_color && ((plot.color.x > 0) || (plot.color.y > 0) || (plot.color.z > 0))) {
-				plot.default_color = false;
-			}
-
-			ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, plot.trans);
-			ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, plot.thickness);
-			if (!plot.default_color) {
-				ImPlot::SetNextLineStyle(plot.color, plot.thickness);
-			}
-			ImPlot::PlotLine(plot.title.c_str(), plot.getData().data(), heightData.data(), heightData.size());
-			if (plot.is_shaded == true) {
-				if (!plot.default_color) {
-					ImPlot::SetNextFillStyle(plot.color, plot.trans);
+		for (int i = 0; i < plots.size(); ++i) {
+			ImPlot::SetNextLineStyle(plots[i].color, plots[i].thickness);
+			ImPlot::PlotLine(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size());
+			if (plots[i].is_shaded == true) {
+				ImPlot::SetNextFillStyle(plots[i].color, plots[i].trans);
+				if (!plots[i].reversed) {
+					ImPlot::PlotShaded(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size(), plots[i].base_line, ImPlotShadedFlags_Horizontal);
 				}
-				ImPlot::PlotShaded(plot.title.c_str(), plot.getData().data(), heightData.data(), heightData.size(), plot.base_line, ImPlotShadedFlags_Horizontal);
+				else {
+					ImPlot::PlotShaded(plots[i].title.c_str(), plots[i].getData().data(), heightData.data(), heightData.size(), 1 - plots[i].base_line, ImPlotShadedFlags_Horizontal);
+				}
 			}
-			ImPlot::PopStyleVar(2);
 
-			if (ImPlot::BeginLegendPopup(plot.title.c_str())) {
-				ImGui::Text(plot.title.c_str());
+			if (ImPlot::BeginLegendPopup(plots[i].title.c_str())) {
+				ImGui::Text(plots[i].title.c_str());
 				ImGui::Separator();
-				ImGui::Checkbox(("Reversed##" + plot.title).c_str(), &plot.reversed);
+				ImGui::Checkbox(("Reversed##" + plots[i].title).c_str(), &plots[i].reversed);
 				ImGui::Separator();
-				ImGui::ColorEdit3(("Color##" + plot.title).c_str(), &plot.color.x);
-				ImGui::SliderFloat(("Thicknes##" + plot.title).c_str(), &plot.thickness, 1, 5, "%.2f");
+				ImGui::DragFloatRange2(("Limit##" + plots[i].title).c_str(), &plots[i].bottom_limit, &plots[i].top_limit, 0.25f, 0.0f, 0.0f, "Min %.2f", "Max %.2f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::Separator();
-				ImGui::Checkbox(("Shaded##" + plot.title).c_str(), &plot.is_shaded);
-				if (plot.is_shaded) {
-					ImGui::SliderFloat(("Transparency##" + plot.title).c_str(), &plot.trans, 0, 1, "%.2f");
-					ImGui::SliderFloat(("Baseline##" + plot.title).c_str(), &plot.base_line, 0, 1, "%.2f");
+				ImGui::ColorEdit3(("Color##" + plots[i].title).c_str(), &plots[i].color.x);
+				ImGui::SliderFloat(("Thicknes##" + plots[i].title).c_str(), &plots[i].thickness, 1, 5, "%.2f");
+				ImGui::Separator();
+				ImGui::Checkbox(("Shaded##" + plots[i].title).c_str(), &plots[i].is_shaded);
+				if (plots[i].is_shaded) {
+					ImGui::SliderFloat(("Transparency##" + plots[i].title).c_str(), &plots[i].trans, 0, 1, "%.2f");
+					if (plots[i].reversed) {
+						ImGui::SliderFloat(("Baseline##" + plots[i].title).c_str(), &plots[i].base_line, 1, 0, "%.2f");
+					}
+					else {
+						ImGui::SliderFloat(("Baseline##" + plots[i].title).c_str(), &plots[i].base_line, 0, 1, "%.2f");
+					}
 				}
 				ImPlot::EndLegendPopup();
 			}
