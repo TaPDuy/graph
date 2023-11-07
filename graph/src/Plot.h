@@ -6,24 +6,23 @@
 
 class Plot
 {
+private:
+	std::vector<double> normalizedData;
+	float oldTopLimit;
+	float oldBottomLimit;
+	bool wasReversed;
+
 public:
 	std::string title;
 	std::vector<double> data;
-	std::vector<double> normalizedData;
-
 	bool isShaded;
 	float baseLine;
 	float topLimit;
 	float bottomLimit;
-	float oldTopLimit;
-	float oldBottomLimit;
 	ImVec4 color;
 	float trans;
 	float thickness;
 	bool reversed;
-	bool wasReversed;
-	double minValue;
-	double maxValue;
 
 	Plot(const std::string& title, const std::vector<double>& data, 
 		double top_limit, double bottom_limit, bool reversed = false, 

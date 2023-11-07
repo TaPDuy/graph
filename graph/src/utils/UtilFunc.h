@@ -7,10 +7,16 @@
 
 namespace UtilFunc {
 	int BinarySearch(const double* arr, int left, int right, double value, double gap);
+
 	// generate random double
 	double RandDouble(int min_value, int max_value);
+
 	// custom round function
 	std::string CustomRound(double value, double precision = 0.01);
+
+	void CustomPlotSyle();
+
+	void CustomCollapStyle();
 }
 
 #endif // !UTIL_FUNC

@@ -19,4 +19,5 @@ private:
 	std::vector<double> heightData;
 	std::vector<Plot> plots;
 	void plotCandlestick(const double* y_value, std::vector<Plot> plots, int count);
+	std::string getMetricData();
 };

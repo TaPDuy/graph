@@ -57,28 +57,22 @@ int PlotMetricFormatter(double value, char* buff, int size, void* user_data) {
 }
 
 void Graph::addPlot(const std::string title, const std::vector<double> data, double top_limit, double bottom_limit, bool reversed, bool is_shaded, double base_line, ImVec4 color) {
-	// take max and min value of array as max and min limits if no value is provided
-	if (bottom_limit >= top_limit) {
-		bottom_limit = INFINITY;
-		top_limit = INFINITY;
-	}
-	double top = ((top_limit != (INFINITY)) ? top_limit : *std::max_element(data.begin(), data.end()));
-	double bottom = ((bottom_limit != (INFINITY)) ? bottom_limit : *std::min_element(data.begin(), data.end()));
+	plots.push_back(Plot(title, data, top_limit, bottom_limit, reversed, is_shaded, base_line, color));
+}
 
-	float base = 0;
-	if ((top >= base_line) && (base_line >= bottom)) {
-		base = float((base_line - bottom) / (top - bottom));
+std::string Graph::getMetricData() {
+	std::string user_data = "";
+	for (int i = 0; i < plots.size(); ++i) {
+		if (plots[i].reversed) {
+			user_data.append(std::to_string(plots[i].bottomLimit) + DELIMITER);
+			user_data.append(std::to_string(plots[i].topLimit) + DELIMITER);
+		}
+		else {
+			user_data.append(std::to_string(plots[i].topLimit) + DELIMITER);
+			user_data.append(std::to_string(plots[i].bottomLimit) + DELIMITER);
+		}
 	}
-
-	double x_color = color.x, y_color = color.y, z_color = color.z;
-	while ((x_color + y_color + z_color) == 0) {
-		x_color = UtilFunc::RandDouble(0, 100) / 100;
-		y_color = UtilFunc::RandDouble(0, 100) / 100;
-		z_color = UtilFunc::RandDouble(0, 100) / 100;
-	}
-	ImVec4 new_color = ImVec4(x_color, y_color, z_color, 1);
-
-	plots.push_back(Plot(title, data, top, bottom, reversed, is_shaded, base, new_color));
+	return user_data;
 }
 
 void Graph::render(const char* vAxisName) {
@@ -99,17 +93,7 @@ void Graph::render(const char* vAxisName) {
 	static double ticks[] = { 0.1, 0.5, 0.9 };
 
 	// get top, bottom limits of plots to use for metric formater
-	std::string user_data = "";
-	for (int i = 0; i < plots.size(); ++i) {
-		if (plots[i].reversed) {
-			user_data.append(std::to_string(plots[i].bottomLimit) + DELIMITER);
-			user_data.append(std::to_string(plots[i].topLimit) + DELIMITER);
-		}
-		else {
-			user_data.append(std::to_string(plots[i].topLimit) + DELIMITER);
-			user_data.append(std::to_string(plots[i].bottomLimit) + DELIMITER);
-		}
-	}
+	std::string user_data = getMetricData();
 
 	// draw plot
 	if (ImPlot::BeginPlot(title.c_str(), ImVec2(0, -1), ImPlotFlags_NoMenus)) {

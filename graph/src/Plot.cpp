@@ -3,12 +3,29 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "utils/UtilFunc.h"
 
 Plot::Plot(const std::string& title, const std::vector<double>& data, double top_limit, double bottom_limit, bool reversed, bool is_shaded, float base_line, ImVec4 color) :
-	title(title), data(data), isShaded(is_shaded), baseLine(base_line), topLimit((float)top_limit), bottomLimit((float)bottom_limit), color(color), reversed(reversed) {
-	if (reversed && base_line == 0) {
-		base_line = 1;
+	title(title), data(data), isShaded(is_shaded), reversed(reversed) {
+	
+	// take max and min value of array as max and min limits if no value is provided
+	if (bottom_limit >= top_limit) {
+		bottom_limit = INFINITY;
+		top_limit = INFINITY;
 	}
+	double top = ((top_limit != (INFINITY)) ? top_limit : *std::max_element(data.begin(), data.end()));
+	double bottom = ((bottom_limit != (INFINITY)) ? bottom_limit : *std::min_element(data.begin(), data.end()));
+	this->topLimit = top;
+	this->bottomLimit = bottom;
+
+	// base line
+	float base = 0;
+	if ((top >= base_line) && (base_line >= bottom)) {
+		base = float((base_line - bottom) / (top - bottom));
+	}
+	this->baseLine = base;
+
+	// set min max values, transparency, line weight
 	trans = 0.2;
 	thickness = 1;
 	double min = data[0], max = data[0];
@@ -16,11 +33,18 @@ Plot::Plot(const std::string& title, const std::vector<double>& data, double top
 		if (min > data[i]) min = data[i];
 		if (max < data[i]) max = data[i];
 	}
-	minValue = ((min > 0) ? 0 : min);
-	maxValue = max;
 	oldTopLimit = topLimit;
 	oldBottomLimit = bottomLimit;
 	wasReversed = reversed;
+
+	// create random color
+	double x_color = color.x, y_color = color.y, z_color = color.z;
+	while ((x_color + y_color + z_color) == 0) {
+		x_color = UtilFunc::RandDouble(0, 100) / 100;
+		y_color = UtilFunc::RandDouble(0, 100) / 100;
+		z_color = UtilFunc::RandDouble(0, 100) / 100;
+	}
+	this->color = ImVec4(x_color, y_color, z_color, color.w);
 
 	for (int i = 0; i < data.size(); ++i) {
 		double cell_value = 0;
