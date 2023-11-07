@@ -56,7 +56,7 @@ void HeatmapGraph::render(const char* vAxisName) {
 	if (ImPlot::BeginPlot((graphTitle + "##heatmap").c_str(), ImVec2(0, -1), ImPlotFlags_NoMenus)) {
 		ImPlot::SetupAxes(
 			("##" + graphTitle).c_str(), vAxisName,
-			ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoDecorations,
+			ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoSideSwitch,
 			((vAxisName == nullptr) * ImPlotAxisFlags_NoLabel) | ((vAxisName == nullptr) * ImPlotAxisFlags_NoTickLabels) | ImPlotAxisFlags_Invert | ImPlotAxisFlags_NoSideSwitch
 		);
 		ImPlot::SetupAxisFormat(ImAxis_X1, "");

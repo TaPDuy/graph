@@ -21,17 +21,22 @@ Plot::Plot(const std::string& title, const std::vector<double>& data,
 	}
 	minValue = ((min > 0) ? 0 : min);
 	maxValue = max;
+	oldTopLimit = topLimit;
+	oldBottomLimit = bottomLimit;
+	for (int i = 0; i < data.size(); ++i) {
+		normalizedData.push_back(0);
+	}
 }
 
 std::vector<double> Plot::getData() {
 	if (bottomLimit >= topLimit) {
 		baseLine = 0;
-		std::vector<double> result;
 		for (int i = 0; i < data.size(); ++i) {
-			result.push_back(0);
+			normalizedData.push_back(0);
 		}
-		return result;
+		return normalizedData;
 	}
+
 	std::vector<double> normalized;
 	for (int i = 0; i < data.size(); ++i) {
 		double cell_value = (data[i] - bottomLimit) / (topLimit - bottomLimit);

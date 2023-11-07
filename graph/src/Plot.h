@@ -9,11 +9,14 @@ class Plot
 public:
 	std::string title;
 	std::vector<double> data;
+	std::vector<double> normalizedData;
 
 	bool isShaded;
 	float baseLine;
 	float topLimit;
 	float bottomLimit;
+	float oldTopLimit;
+	float oldBottomLimit;
 	ImVec4 color;
 	float trans;
 	float thickness;
