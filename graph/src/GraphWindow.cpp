@@ -4,9 +4,7 @@ GraphWindow::GraphWindow(const std::string& title) :
 	title(title),
 	csv("assets/data.csv"),
 	group("Data", "Depth", csv.getColumn("DEPT"))
-{
-
-}
+{ }
 
 void GraphWindow::init() {
 	group.addGraph("gamma-ray");

@@ -5,26 +5,24 @@
 #include <vector>
 #include <cmath>
 
-#include <iostream>
-
 struct Plot
 {
 	std::string title;
 	std::vector<double> data;
 
-	bool is_shaded;
-	float base_line;
-	float top_limit;
-	float bottom_limit;
+	bool isShaded;
+	float baseLine;
+	float topLimit;
+	float bottomLimit;
 	ImVec4 color;
 	float trans;
 	float thickness;
 	bool reversed;
-	double min_value;
-	double max_value;
+	double minValue;
+	double maxValue;
 
 	Plot(const std::string& title, const std::vector<double>& data, double top_limit, double bottom_limit, bool reversed = false, bool is_shaded = false, float base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1)) :
-		title(title), data(data), is_shaded(is_shaded), base_line(base_line), top_limit((float)top_limit), bottom_limit((float)bottom_limit), color(color), reversed(reversed) {
+		title(title), data(data), isShaded(is_shaded), baseLine(base_line), topLimit((float)top_limit), bottomLimit((float)bottom_limit), color(color), reversed(reversed) {
 		if (reversed && base_line == 0) {
 			base_line = 1;
 		}
@@ -35,13 +33,13 @@ struct Plot
 			if (min > data[i]) min = data[i];
 			if (max < data[i]) max = data[i];
 		}
-		min_value = ((min > 0) ? 0 : min);
-		max_value = max;
+		minValue = ((min > 0) ? 0 : min);
+		maxValue = max;
 	}
 
 	std::vector<double> getData() {
-		if (bottom_limit >= top_limit) {
-			base_line = 0;
+		if (bottomLimit >= topLimit) {
+			baseLine = 0;
 			std::vector<double> result;
 			for (int i = 0; i < data.size(); ++i) {
 				result.push_back(0);
@@ -50,7 +48,7 @@ struct Plot
 		}
 		std::vector<double> normalized;
 		for (int i = 0; i < data.size(); ++i) {
-			double cell_value = (data[i] - bottom_limit) / (top_limit - bottom_limit);
+			double cell_value = (data[i] - bottomLimit) / (topLimit - bottomLimit);
 			if (reversed) {
 				cell_value = 1 - cell_value;
 			}
@@ -72,4 +70,5 @@ private:
 	std::string title;
 	std::vector<double> heightData;
 	std::vector<Plot> plots;
+	void plotCandlestick(const double* y_value, std::vector<Plot> plots, int count);
 };
