@@ -21,6 +21,7 @@ public:
 	float trans;
 	float thickness;
 	bool reversed;
+	bool wasReversed;
 	double minValue;
 	double maxValue;
 
