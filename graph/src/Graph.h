@@ -1,10 +1,28 @@
 #pragma once
 
 #include "Plot.h"
+#include "utils/rand_utils.h"
 
 #include <ImPlot/implot.h>
 #include <string>
 #include <vector>
+
+struct DataColumn {
+	int idx;
+	const char* label;
+	ImVec4 color;
+	const double* data;
+	size_t size;
+
+	DataColumn(const std::string& label, const std::vector<double>& data) {
+		static int uniqueId = 0;
+		this->idx = uniqueId++;
+		this->label = label.c_str();
+		this->data = data.data();
+		this->size = data.size();
+		this->color = randColor();
+	}
+};
 
 class Graph
 {

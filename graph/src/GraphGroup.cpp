@@ -28,6 +28,12 @@ inline void GraphGroup::addGraph(const std::string& graphName, const std::string
 	addPlot(graphName, dataName, data, max_value, min_value);
 }
 
+void GraphGroup::addColumn(const std::string& name, const std::vector<double>& data) {
+	DataColumn col(name, data);
+	columns.push_back(col);
+	isShown[col.idx] = false;
+}
+
 void GraphGroup::setRatio() {
 	int count = 0;
 	for (std::map<std::string, bool>::iterator it = display.begin(); it != display.end(); ++it) {
@@ -45,6 +51,24 @@ void GraphGroup::setRatio() {
 
 void GraphGroup::render() {
 	setRatio();
+
+	ImGui::BeginChild("Plot list", ImVec2(100, -1));
+	for (const DataColumn& col : columns) {
+		if (isShown[col.idx])
+			continue;
+
+		ImPlot::ItemIcon(col.color); ImGui::SameLine();
+		ImGui::Selectable(col.label, false, 0, ImVec2(100, 0));
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+			ImGui::SetDragDropPayload("Plot data", &col, sizeof(DataColumn));
+			ImPlot::ItemIcon(col.color); ImGui::SameLine();
+			ImGui::TextUnformatted(col.label);
+			ImGui::EndDragDropSource();
+		}
+	}
+	ImGui::EndChild();
+	ImGui::SameLine();
+	ImGui::BeginChild("Plots", ImVec2(-1, -1));
 
 	ImGuiStyle styleBackup = ImGui::GetStyle();
 	UtilFunc::CustomCollapStyle();
@@ -70,7 +94,10 @@ void GraphGroup::render() {
 	ImPlotStyle backup = ImPlot::GetStyle();
 	UtilFunc::CustomPlotSyle();
 	bool display_y_axis = true;
-	if (ImPlot::BeginSubplots(title.c_str(), 1, (graphs.size() + heatmapGraphs.size()), ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY, nullptr, ratio.data())) {
+
+	bool dragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
+	int col = (graphs.size() + heatmapGraphs.size());
+	if (ImPlot::BeginSubplots(title.c_str(), 1, col > 0 ? col : 1, ImVec2(-1, -1), ImPlotSubplotFlags_LinkAllY, nullptr, ratio.data())) {
 		for (auto it = graphs.begin(); it < graphs.end(); ++it) {
 			if (!display[(*it)->getTitle()]) continue;
 			if (display_y_axis) {
@@ -90,12 +117,35 @@ void GraphGroup::render() {
 				heatmapGraphs[i].render(nullptr);
 			}
 		}
+
 		ImPlot::EndSubplots();
+	}
+
+	if (dragging) {
+		ImGui::SameLine();
+		ImGui::BeginChild("Drop zone", ImVec2(100, -1));
+		ImGui::Text("Drop here");
+		ImGui::EndChild();
+	}
+
+	if (ImGui::BeginDragDropTarget()) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Plot data")) {
+			DataColumn* col = (DataColumn*)payload->Data;
+			std::string label = col->label;
+			std::vector<double> data(col->data, col->data + col->size);
+			this->addGraph(label);
+			this->addPlot(label, label, data, 0, 16, false, false, 0.0f, col->color);
+			isShown[col->idx] = true;
+		}
+
+		ImGui::EndDragDropTarget();
 	}
 
 	ImPlot::GetStyle() = backup;
 	ImPlot::PopColormap();
 	ImGui::GetStyle() = styleBackup;
+
+	ImGui::EndChild();
 }
 
 GraphGroup::~GraphGroup() {

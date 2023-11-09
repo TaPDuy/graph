@@ -16,4 +16,5 @@ private:
 	CSV csv;
 	GraphGroup group;
 	std::string title;
+	std::vector<DataColumn> data;
 };

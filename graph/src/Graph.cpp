@@ -146,6 +146,17 @@ void Graph::render(const char* vAxisName) {
 				ImPlot::EndLegendPopup();
 			}
 		}
+
+		if (ImPlot::BeginDragDropTargetPlot()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Plot data")) {
+				DataColumn* col = (DataColumn*)payload->Data;
+				std::string label = col->label;
+				std::vector<double> data(col->data, col->data + col->size);
+				this->addPlot(label, data, 0, 16, false, false, 0.0f, col->color);
+			}
+			ImPlot::EndDragDropTarget();
+		}
+
 		// create a tooltip table
 		plotCandlestick(heightData.data(), plots, heightData.size());
 		ImPlot::EndPlot();

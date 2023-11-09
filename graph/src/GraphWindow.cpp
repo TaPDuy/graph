@@ -7,7 +7,12 @@ GraphWindow::GraphWindow(const std::string& title) :
 { }
 
 void GraphWindow::init() {
-	group.addGraph("gamma-ray");
+	const std::vector<std::string>& headers = csv.getHeaders();
+	for (auto it = headers.begin() + 1; it < headers.end(); ++it) {
+		group.addColumn(*it, csv.getColumn(*it));
+	}
+
+	/*group.addGraph("gamma-ray");
 	group.addPlot("gamma-ray", "GR", csv.getColumn("GR"), INFINITY, 0, false, true, 0);
 	group.addPlot("gamma-ray", "CAL", csv.getColumn("CAL"), 16, 0);
 
@@ -43,7 +48,7 @@ void GraphWindow::init() {
 	group.addPlot("oil in place", "OIP", csv.getColumn("OIP"), 0.25, 0, false, true);
 	group.addPlot("oil in place", "SUM OIP", csv.getColumn("SUM OIP"), 50, 0, true, true);
 
-	group.addHeatMapGraph("Electrofacies", csv.getColumn("Electrofacies"));
+	group.addHeatMapGraph("Electrofacies", csv.getColumn("Electrofacies"));*/
 }
 
 void GraphWindow::render(GLFWwindow* window) {
@@ -55,4 +60,7 @@ void GraphWindow::render(GLFWwindow* window) {
 	ImGui::Begin(title.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 	group.render();
 	ImGui::End();
+
+	/*ImGui::ShowDemoWindow();
+	ImPlot::ShowDemoWindow();*/
 }
