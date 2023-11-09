@@ -2,6 +2,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <time.h>
+#include <stdlib.h>
+
 #include <ImGui/imgui.h>
 #include <ImGui/imgui_impl_glfw.h>
 #include <ImGui/imgui_impl_opengl3.h>
@@ -11,6 +14,8 @@
 #include "GraphWindow.h"
 
 int main() {
+
+	srand(time(0));
 
 	glfwInit();
 	const char* glsl_version = "#version 330 core";
