@@ -13,7 +13,7 @@ public:
 		return data.at(header).data();
 	}
 
-	inline std::vector<double> getColumn(const std::string& header) const {
+	inline const std::vector<double>& getColumn(const std::string& header) const {
 		return data.at(header);
 	}
 
