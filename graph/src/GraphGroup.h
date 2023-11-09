@@ -10,7 +10,7 @@
 class GraphGroup
 {
 public:
-	GraphGroup(const std::string& title, const std::string& heightTitle, const std::vector<double>& height);
+	GraphGroup(const std::string& title, const std::string& heightTitle, const std::vector<double>& height, const int& maxGraph = 1);
 	~GraphGroup();
 
 	void addGraph(const std::string& name);
@@ -18,6 +18,7 @@ public:
 	void addPlot(const std::string& graphName, const std::string& name, const std::vector<double>& data, double top_limit = INFINITY, double bottom_limit = INFINITY, bool reseved = false, bool is_shaded = false, double base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1));
 	inline void addGraph(const std::string& graphName, const std::string& dataName, const std::vector<double>& data, double top_limit, double bottom_limit);
 	void render();
+	void clear();
 
 private:
 	std::string title;
@@ -28,7 +29,7 @@ private:
 	std::string heightTitle;
 	std::map<std::string, bool> display;
 	std::vector<float> ratio;
-
+	int maxGraph;
 	void setRatio();
 };
 

@@ -4,6 +4,10 @@
 #include <map>
 #include <string>
 
+enum GraphFile {
+	GammaRay, Resistivity, NeutronDensity, Toc, Mineralogoy, Porosity, Saturation, OilInPlace, Electrofacies
+};
+
 class CSV
 {
 public:

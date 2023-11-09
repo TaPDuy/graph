@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <sstream>
+#include <iostream>
 
 #include "ImPlot/implot.h"
 #include "ImPlot/implot_internal.h"
@@ -147,8 +148,15 @@ void Graph::render(const char* vAxisName) {
 			}
 		}
 		// create a tooltip table
+		
 		plotCandlestick(heightData.data(), plots, heightData.size());
 		ImPlot::EndPlot();
+
+		if (ImGui::BeginDragDropSource()) {
+			ImGui::SetDragDropPayload("SEC_PAYLOAD", &(title), sizeof(title));
+			ImGui::Text(title.c_str());
+			ImGui::EndDragDropSource();
+		}
 	}
 }
 

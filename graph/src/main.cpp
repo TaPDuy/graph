@@ -40,7 +40,17 @@ int main() {
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	GraphWindow graph("Graph");
-	graph.init();
+	static std::map<GraphFile, std::string> options = {
+		{GraphFile::GammaRay, "Gramma ray"},
+		{GraphFile::Mineralogoy, "Mineralogoy"},
+		{GraphFile::NeutronDensity, "NeutronDensity"},
+		{GraphFile::OilInPlace, "OilInPlace"},
+		{GraphFile::Porosity, "Porosity"},
+		{GraphFile::Resistivity, "Resistivity"},
+		{GraphFile::Saturation, "Saturation"},
+		{GraphFile::Toc, "Toc"},
+		{GraphFile::Electrofacies, "Electrofacies"}
+	};
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -50,13 +60,57 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		graph.render(window);
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		ImGui::SetNextWindowSize(ImVec2(width, height));
+		ImGui::SetNextWindowPos(ImVec2(0, 0));
+
+		ImGui::Begin(graph.getTitle().c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		{
+			ImGui::BeginChild("Select area", ImVec2(100, -1));
+			if (ImGui::Button("Reset")) {
+				graph.reset();
+			}
+			for (std::map<GraphFile, std::string>::iterator it = options.begin(); it != options.end(); ++it) {
+				if (graph.isGraphIncluded(it->first)) continue;
+				ImGui::Selectable(it->second.c_str(), false, 0, ImVec2(100, 0));
+				if (ImGui::BeginDragDropSource()) {
+					ImGui::SetDragDropPayload("GRAPH_PAYLOAD", &(it->first), sizeof(GraphFile));
+					ImGui::Text(it->second.c_str());
+					ImGui::EndDragDropSource();
+				}
+			}
+			ImGui::EndChild();
+
+			if (ImGui::BeginDragDropTarget()) {
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SEC_PAYLOAD")) {
+					std::string name = *(std::string*)payload->Data;
+					std::cout << name << "\n";
+					graph.removeGraph(name);
+				}
+				ImGui::EndDragDropTarget();
+			}
+		}
+
+		ImGui::SameLine();
+
+		{
+			ImGui::BeginChild("Graph area", ImVec2(-1, -1));
+			graph.render(window);
+			if (ImGui::BeginDragDropTarget()) {
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GRAPH_PAYLOAD")) {
+					GraphFile idx = *(GraphFile*)payload->Data;
+					graph.loadFile(idx);
+				}
+				ImGui::EndDragDropTarget();
+			}
+			ImGui::EndChild();
+		}
+		ImGui::End();
 
 		ImGui::Render();
-
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 		glfwSwapBuffers(window);
 	}
 

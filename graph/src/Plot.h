@@ -27,5 +27,5 @@ public:
 	Plot(const std::string& title, const std::vector<double>& data, 
 		double top_limit, double bottom_limit, bool reversed = false, 
 		bool is_shaded = false, float base_line = 0, ImVec4 color = ImVec4(0, 0, 0, 1));
-	std::vector<double> getData();
+	std::vector<double>& getData();
 };

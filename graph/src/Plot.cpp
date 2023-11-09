@@ -58,7 +58,7 @@ Plot::Plot(const std::string& title, const std::vector<double>& data, double top
 	}
 }
 
-std::vector<double> Plot::getData() {
+std::vector<double>& Plot::getData() {
 	if (bottomLimit >= topLimit) {
 		baseLine = 0;
 		for (int i = 0; i < data.size(); ++i) {
