@@ -8,6 +8,7 @@
 #include "ImPlot/implot.h"
 #include "ImPlot/implot_internal.h"
 #include "utils/UtilFunc.h"
+#include "utils/CSV.h"
 
 #define DELIMITER "|"
 
@@ -15,7 +16,7 @@ Graph::Graph(const std::string& graphTitle, const std::vector<double>& height) :
 	title(graphTitle), heightData(height) {}
 
 // create tooltip table when hover over graph
-void Graph::plotCandlestick(const double* y_value, std::vector<Plot> plots, int count) {
+void Graph::plotCandlestick(const double* y_value, std::vector<Plot>& plots, int count) {
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
 		double gap = y_value[1] - y_value[0];
@@ -148,8 +149,8 @@ void Graph::render(const char* vAxisName) {
 			}
 		}
 		// create a tooltip table
-		
 		plotCandlestick(heightData.data(), plots, heightData.size());
+
 		ImPlot::EndPlot();
 
 		if (ImGui::BeginDragDropSource()) {

@@ -57,14 +57,7 @@ void GraphGroup::setRatio() {
 
 void GraphGroup::render() {
 	setRatio();
-
 	ImGuiStyle styleBackup = ImGui::GetStyle();
-	UtilFunc::CustomCollapStyle();
-
-	ImGui::Spacing(); ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing(); ImGui::Spacing();
-
 	ImPlot::PushColormap(ImPlotColormap_Deep);
 	ImPlotStyle backup = ImPlot::GetStyle();
 	UtilFunc::CustomPlotSyle();

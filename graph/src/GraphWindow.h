@@ -17,6 +17,8 @@ public:
 	bool isGraphIncluded(GraphFile name);
 	void loadFile(GraphFile name);
 	void removeGraph(std::string title);
+	void refresh();
+	void redisplayData();
 
 private:
 	CSV csv;

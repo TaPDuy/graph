@@ -67,25 +67,33 @@ int main() {
 
 		ImGui::Begin(graph.getTitle().c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 		{
-			ImGui::BeginChild("Select area", ImVec2(100, -1));
-			if (ImGui::Button("Reset")) {
+			ImGui::BeginChild("Select area", ImVec2(150, -1));
+			if (ImGui::CollapsingHeader("Graph##choosegrap")) {
+				for (std::map<GraphFile, std::string>::iterator it = options.begin(); it != options.end(); ++it) {
+					if (graph.isGraphIncluded(it->first)) continue;
+					ImGui::Selectable(it->second.c_str(), false, 0, ImVec2(150, 0));
+					if (ImGui::BeginDragDropSource()) {
+						ImGui::SetDragDropPayload("GRAPH_PAYLOAD", &(it->first), sizeof(GraphFile));
+						ImGui::Text(it->second.c_str());
+						ImGui::EndDragDropSource();
+					}
+				}
+			}
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+			if (ImGui::Button("Reset", ImVec2(-1, 0))) {
 				graph.reset();
 			}
-			for (std::map<GraphFile, std::string>::iterator it = options.begin(); it != options.end(); ++it) {
-				if (graph.isGraphIncluded(it->first)) continue;
-				ImGui::Selectable(it->second.c_str(), false, 0, ImVec2(100, 0));
-				if (ImGui::BeginDragDropSource()) {
-					ImGui::SetDragDropPayload("GRAPH_PAYLOAD", &(it->first), sizeof(GraphFile));
-					ImGui::Text(it->second.c_str());
-					ImGui::EndDragDropSource();
-				}
+			ImGui::Spacing();
+			if (ImGui::Button("Refresh", ImVec2(-1, 0))) {
+				graph.refresh();
 			}
 			ImGui::EndChild();
 
 			if (ImGui::BeginDragDropTarget()) {
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SEC_PAYLOAD")) {
 					std::string name = *(std::string*)payload->Data;
-					std::cout << name << "\n";
 					graph.removeGraph(name);
 				}
 				ImGui::EndDragDropTarget();

@@ -32,7 +32,7 @@ std::string HeatmapGraph::getTitle() {
 }
 
 // create tooltip table when hover over graph
-void HeatmapGraph::heatmapCandlestick(const double* y_value, int count, std::vector<double> data, std::string graph_title) {
+void HeatmapGraph::heatmapCandlestick(const double* y_value, int count, std::vector<double>& data, std::string graph_title) {
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
 		double gap = 0.5;
@@ -83,6 +83,12 @@ void HeatmapGraph::render(const char* vAxisName) {
 		}
 		heatmapCandlestick(depth.data(), depth.size(), data, graphTitle);
 		ImPlot::EndPlot();
+
+		if (ImGui::BeginDragDropSource()) {
+			ImGui::SetDragDropPayload("SEC_PAYLOAD", &(graphTitle), sizeof(graphTitle));
+			ImGui::Text(graphTitle.c_str());
+			ImGui::EndDragDropSource();
+		}
 	}
 	ImPlot::PopColormap();
 }

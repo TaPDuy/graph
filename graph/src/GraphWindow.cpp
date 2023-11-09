@@ -20,6 +20,7 @@ GraphWindow::GraphWindow(const std::string& title) :
 
 void GraphWindow::loadFile(GraphFile name) {
 	// if (displayed[name]) return;
+	
 	switch (name) {
 	case GammaRay:
 		group.addGraph("gamma-ray");
@@ -100,16 +101,24 @@ void GraphWindow::reset() {
 	group.clear();
 }
 
-void GraphWindow::removeGraph(std::string title) {
-	GraphFile id = graphMap[title];
-	displayed[id] = false;
-	std::vector<GraphFile> isBeingDisplay;
+void GraphWindow::redisplayData() {
 	group.clear();
 	for (std::map<GraphFile, bool>::iterator it = displayed.begin(); it != displayed.end(); ++it) {
 		if (displayed[it->first]) {
 			loadFile(it->first);
 		}
 	}
+}
+
+void GraphWindow::refresh() {
+	csv.loadData();
+	redisplayData();
+}
+
+void GraphWindow::removeGraph(std::string title) {
+	GraphFile id = graphMap[title];
+	displayed[id] = false;
+	redisplayData();
 }
 
 std::string GraphWindow::getTitle() {

@@ -29,12 +29,14 @@ public:
 		return length;
 	}
 
-	std::vector<double> normalize(const std::string& header, double min, double max);
-private:
+	void loadData();
 
+	//std::vector<double> normalize(const std::string& header, double min, double max);
+private:
+	std::string path;
 	size_t length;
 	std::vector<std::string> headers;
 	std::map<std::string, std::vector<double>> data;
-	std::map<std::string, std::vector<double>> normalizedData;
+	// std::map<std::string, std::vector<double>> normalizedData;
 };
 
